@@ -165,3 +165,42 @@ def get_profile_info(Authorization: str = Header(...)):
         return {}
 
     return profile
+
+@app.post("/profile-info")
+def save_profile_info(profile: UserProfile, Authorization: str = Header(...)):
+    token = Authorization.split(" ")[1]
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        user_email = payload.get("sub")
+    except jwt.PyJWTError:
+        raise HTTPException(status_code=401, detail="유효하지 않은 토큰입니다.")
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT id FROM users WHERE email = %s", (user_email,))
+    result = cursor.fetchone()
+    if not result:
+        cursor.close()
+        conn.close()
+        raise HTTPException(status_code=404, detail="사용자를 찾을 수 없습니다.")
+
+    user_id = result[0]
+    now = datetime.now()
+
+    cursor.execute("""
+        INSERT INTO user_profiles (user_id, height_cm, weight_kg, birth_year, gender, created_at)
+        VALUES (%s, %s, %s, %s, %s, %s)
+        ON DUPLICATE KEY UPDATE
+          height_cm = VALUES(height_cm),
+          weight_kg = VALUES(weight_kg),
+          birth_year = VALUES(birth_year),
+          gender = VALUES(gender),
+          created_at = VALUES(created_at)
+    """, (user_id, profile.height_cm, profile.weight_kg, profile.birth_year, profile.gender, now))
+
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    return {"msg": "프로필이 저장되었습니다."}
