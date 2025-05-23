@@ -2,7 +2,7 @@
 from fastapi import FastAPI, HTTPException, Depends, Header
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from passlib.context import CryptContext
 from datetime import datetime, timedelta
 import jwt
@@ -46,6 +46,14 @@ class UserCreate(BaseModel):
     nickname: str
     email: str
     password: str
+
+
+class UserProfile(BaseModel):
+    height_cm: int
+    weight_kg: int
+    birth_year: int
+    gender: str = Field(pattern="^(M|F)$")
+
 
 # 유틸 함수
 def hash_password(password):
@@ -125,3 +133,35 @@ def get_profile(Authorization: str = Header(...)):
         raise HTTPException(status_code=404, detail="사용자를 찾을 수 없습니다.")
 
     return user  # {"nickname": "...", "email": "..."}
+
+#사용자 신체정보 엔드포인트
+@app.get("/profile-info")
+def get_profile_info(Authorization: str = Header(...)):
+    token = Authorization.split(" ")[1]
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        user_email = payload.get("sub")
+    except jwt.PyJWTError:
+        raise HTTPException(status_code=401, detail="유효하지 않은 토큰이다냥!")
+
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    cursor.execute("SELECT id FROM users WHERE email = %s", (user_email,))
+    result = cursor.fetchone()
+    if not result:
+        cursor.close()
+        conn.close()
+        raise HTTPException(status_code=404, detail="사용자를 찾을 수 없다냥!")
+
+    user_id = result["id"]
+    cursor.execute("SELECT height_cm, weight_kg, birth_year, gender FROM user_profiles WHERE user_id = %s", (user_id,))
+    profile = cursor.fetchone()
+
+    cursor.close()
+    conn.close()
+
+    if not profile:
+        return {}
+
+    return profile
