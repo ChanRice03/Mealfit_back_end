@@ -70,7 +70,7 @@ def register(user: UserCreate):
     if cursor.fetchone():
         cursor.close()
         conn.close()
-        raise HTTPException(status_code=400, detail="이미 존재하는 이메일이다냥!")
+        raise HTTPException(status_code=400, detail="이미 존재하는 이메일입니다.")
 
     hashed_pw = hash_password(user.password)
     now = datetime.now()
@@ -82,7 +82,7 @@ def register(user: UserCreate):
 
     cursor.close()
     conn.close()
-    return {"msg": "회원가입 성공했다냥!"}
+    return {"msg": "회원가입의 성공했습니다."}
 
 # 로그인 엔드포인트
 @app.post("/token")
@@ -97,7 +97,7 @@ def login(form_data: OAuth2PasswordRequestForm = Depends()):
     conn.close()
 
     if not user or not verify_password(form_data.password, user["password_hash"]):
-        raise HTTPException(status_code=400, detail="이메일 또는 비밀번호가 틀렸다냥!")
+        raise HTTPException(status_code=400, detail="이메일 또는 비밀번호가 틀렸습니다.")
 
     token_data = {"sub": user["email"], "id": user["id"]}
     token = create_access_token(token_data)
@@ -112,7 +112,7 @@ def get_profile(Authorization: str = Header(...)):
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         user_email = payload.get("sub")
     except jwt.PyJWTError:
-        raise HTTPException(status_code=401, detail="유효하지 않은 토큰이다냥!")
+        raise HTTPException(status_code=401, detail="유효하지 않은 토큰입니다.")
 
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
@@ -122,6 +122,6 @@ def get_profile(Authorization: str = Header(...)):
     conn.close()
 
     if not user:
-        raise HTTPException(status_code=404, detail="사용자를 찾을 수 없다냥!")
+        raise HTTPException(status_code=404, detail="사용자를 찾을 수 없습니다.")
 
     return user  # {"nickname": "...", "email": "..."}
