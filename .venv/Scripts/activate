@@ -38,7 +38,7 @@ deactivate () {
 # unset irrelevant variables
 deactivate nondestructive
 
-VIRTUAL_ENV="C:\Users\cse20\Desktop\Computer\Py_vscode\DB_id_pass\.venv"
+VIRTUAL_ENV="C:\Users\cse20\Desktop\Computer\Py_vscode\Mealfit_back_end\.venv"
 export VIRTUAL_ENV
 
 _OLD_VIRTUAL_PATH="$PATH"

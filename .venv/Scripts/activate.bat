@@ -8,7 +8,7 @@ if defined _OLD_CODEPAGE (
     "%SystemRoot%\System32\chcp.com" 65001 > nul
 )
 
-set VIRTUAL_ENV=C:\Users\cse20\Desktop\Computer\Py_vscode\DB_id_pass\.venv
+set VIRTUAL_ENV=C:\Users\cse20\Desktop\Computer\Py_vscode\Mealfit_back_end\.venv
 
 if not defined PROMPT set PROMPT=$P$G
 
